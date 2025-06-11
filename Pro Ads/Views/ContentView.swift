@@ -6,21 +6,37 @@
 //
 
 import SwiftUI
+import Combine
 
 struct ContentView: View {
+    @StateObject private var viewModel = AdListViewModel()
     var body: some View {
         NavigationStack {
             ZStack {
                 Color.red
                     .ignoresSafeArea(.all)
-                List {
-                    ForEach(0..<20, id: \.self) { _ in
-                        AdCellView()
+                if viewModel.isLoading {
+                    ProgressView("Loading Ads...")
+                } else if let errorMessage = viewModel.errorMessage {
+                    Text("Error: \(errorMessage)")
+                        .foregroundColor(.red)
+                        .padding()
+                    Button("Retry") {
+                        viewModel.fetchAds()
                     }
+                } else {
+                    List {
+                        ForEach(viewModel.ads) { ad in
+                            AdCellView(cellData: ad)
+                        }
+                        .listRowSeparator(.hidden)
+                    }
+                    .listStyle(.plain)
                     .listRowSeparator(.hidden)
                 }
-                .listStyle(.plain)
-                .listRowSeparator(.hidden)
+            }
+            .onAppear{
+                viewModel.fetchAds()
             }
             
         }
