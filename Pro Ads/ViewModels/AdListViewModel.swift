@@ -6,19 +6,36 @@
 //
 
 import Foundation
-import SwiftUI
 import Combine
+import SwiftUICore
 
 class AdListViewModel: ObservableObject {
     @Published var ads: [Ad] = []
     @Published var isLoading: Bool = false
     @Published var errorMessage: String? = nil
+    @Published var showAllFavourites: Bool = false
 
     private let apiHandler: APIHandeler
     private var cancellables = Set<AnyCancellable>()
+    @ObservedObject var favoriteManager: FavoriteManager
     
-    init(apiHandler: APIHandeler = APIHandeler()) {
+    var filteredAds: [Ad] {
+            if showAllFavourites {
+                return ads.filter { favoriteManager.favoriteAds[$0.id] != nil }
+            } else {
+                return ads
+            }
+        }
+    
+    init(apiHandler: APIHandeler = APIHandeler(), favoriteManager: FavoriteManager = FavoriteManager()) {
         self.apiHandler = apiHandler
+        self.favoriteManager = favoriteManager
+        favoriteManager.$favoriteAds
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.objectWillChange.send()
+            }
+            .store(in: &cancellables)
     }
 
     func fetchAds() {

@@ -12,33 +12,45 @@ struct ContentView: View {
     @StateObject private var viewModel = AdListViewModel()
     var body: some View {
         NavigationStack {
-            ZStack {
-                Color.red
+            ScrollView {
+                Color.white
                     .ignoresSafeArea(.all)
-                if viewModel.isLoading {
-                    ProgressView("Loading Ads...")
-                } else if let errorMessage = viewModel.errorMessage {
-                    Text("Error: \(errorMessage)")
-                        .foregroundColor(.red)
-                        .padding()
-                    Button("Retry") {
-                        viewModel.fetchAds()
+                VStack {
+                    Picker("Filter", selection: $viewModel.showAllFavourites) {
+                        Text("All Ads").tag(false)
+                        Text("Favorites Only").tag(true)
                     }
-                } else {
-                    List {
-                        ForEach(viewModel.ads) { ad in
-                            AdCellView(cellData: ad)
+                    .pickerStyle(.segmented)
+                    .padding()
+
+                    Spacer()
+
+                    if viewModel.isLoading {
+                        ProgressView("Loading Ads...")
+                    } else if let errorMessage = viewModel.errorMessage {
+                        Text("Error: \(errorMessage)")
+                            .foregroundColor(.red)
+                            .padding()
+                        Button("Retry") {
+                            viewModel.fetchAds()
                         }
-                        .listRowSeparator(.hidden)
+                    } else {
+                        LazyVGrid(columns: [GridItem()]) {
+                            ForEach(viewModel.filteredAds) { ad in
+                                AdCellView(
+                                    cellData: ad,
+                                    favoriteManager: viewModel.favoriteManager
+                                )
+                            }
+                        }
+                        .padding()
                     }
-                    .listStyle(.plain)
-                    .listRowSeparator(.hidden)
+                }
+                .navigationTitle("List Ads")
+                .onAppear {
+                    viewModel.fetchAds()
                 }
             }
-            .onAppear{
-                viewModel.fetchAds()
-            }
-            
         }
     }
 }

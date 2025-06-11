@@ -9,6 +9,8 @@ import SwiftUI
 
 struct AdCellView: View {
     let cellData: Ad
+    @ObservedObject var favoriteManager: FavoriteManager
+    
     var body: some View {
         VStack (spacing: 10) {
             ZStack (alignment: .topTrailing){
@@ -30,13 +32,11 @@ struct AdCellView: View {
                 .frame(maxWidth: .infinity)
                 .frame(height: 200)
                 .clipped()
-                
-
-                
+                                
                 Button(action: {
-                    
+                    favoriteManager.toggleFavorite(ad: cellData)
                 }) {
-                    Image(systemName: "heart.fill")
+                    Image(systemName: favoriteManager.isFavorited(adID: cellData.id) ? "heart.fill" : "heart")
                         .font(.title2)
                         .foregroundColor(.white)
                         .padding(12)
@@ -45,11 +45,11 @@ struct AdCellView: View {
                 }
             }
             
-            VStack (spacing: 10){
+            VStack (alignment: .leading, spacing: 10){
                 Text(cellData.description ?? "Unknown Description")
                     .font(.title3)
                     .lineLimit(2)
-                Text("Price: \(cellData.price?.total ?? 00)NOK")
+                Text("Price: \(cellData.price?.total ?? 00) NOK")
                     .font(.subheadline)
                 Text("Location: \(cellData.location ?? "Unknown location")")
                     .font(.footnote)
@@ -65,5 +65,5 @@ struct AdCellView: View {
 }
 
 #Preview {
-    AdCellView(cellData: Ad(description: "", id: "1234", url: "", adType: "Test", location: "", type: "", price: nil, image: nil, score: nil))
+    AdCellView(cellData: Ad(description: "", id: "1234", url: "", adType: "Test", location: "", type: "", price: nil, image: nil, score: nil), favoriteManager: FavoriteManager())
 }
